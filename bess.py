@@ -18,7 +18,8 @@ class BatteryObj:
                 batt_max_cyc:float,
                 eta_batt:float,
                 rt_eff:float,
-                ret_eta:float):
+                ret_eta:float,
+                inverter_max:float):
         self.max_capcity = max_capacity
         self.cpx_inv = cpx_inv
         self.cpx_batt = cpx_batt
@@ -30,6 +31,7 @@ class BatteryObj:
         self.eta_batt = eta_batt
         self.rt_eff = rt_eff
         self.ret_eta = ret_eta
+        self.inverter_max = inverter_max
         return
 
     def set_time(self, t0, tf):
@@ -37,12 +39,12 @@ class BatteryObj:
         self.tf = tf
         return
 
-battery = BatteryObj(50000,21.7391,434.782,0.8695,1,50000,50000,1,0.00005475,0.85,0.01)
+battery = BatteryObj(50000,21.7391,434.782,0.8695,1,50000,50000,1,0.00005475,0.85,0.01,50000)
 
 ### Model Parameters
 
 t0 = 0
-tf = 8736 
+tf = 8760 
 hour = np.arange(t0,tf)
 
 ## Model Definition
@@ -77,4 +79,28 @@ model.battery.b_soc = Constraint(hour, rule=bound_soc)
 
 def bound_charging(_blk, t):
     return inequality(0, _blk.DC_CHARGE[t], _blk.I_c[t]*battery.charge_rate_max)
-model.battery.b_charge
+model.battery.b_charge = Constraint(hour, rule=bound_charging)
+
+def bound_charging(_blk, t):
+    return inequality(0, _blk.DC_DICHARGE[t], _blk.I_c[t]*battery.discharge_rate_max)
+model.battery.b_discharge = Constraint(hour, rule=bound_charging)
+
+def rule_charge_decision(_blk, t):
+    return _blk[t].I_c+_blk[t].I_d <= 1 
+model.battery.r_charge_decision = Constraint(hour, rule=rule_charge_decision)
+
+def bound_charge_decision(_blk, t):
+    net_charge = abs(_blk[t].DC_CHARGE-_blk[t].DC_DISCHARGE)
+    return inequality(0, net_charge, battery.inverter_max)
+model.battery.b_charge_decision = Constraint(hour, rule=bound_charge_decision)
+
+def bound_soh_discharge(_blk, t):
+    return _blk[t].I_c+_blk[t].I_d[t] <= 1
+model.battery.b_soh_decision = Constraint(hour, rule=bound_soh_discharge)
+
+def rule_degredation(_blk):
+    total_discharge = (1/(1-battery.eta_batt))*(sum(_blk[i].DC_DISCHARGE for i in _blk.T))
+    charge_limit = (1/24)*battery.charge_rate_max*(sum(_blk[i].SOH for i in _blk.T))
+    return total_discharge <= charge_limit
+model.battery.r_degredation = Constraint(rule=rule_degredation)
+
