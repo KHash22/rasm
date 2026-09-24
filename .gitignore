@@ -1,3 +1,7 @@
 .env
 .venv
 .bashrc
+market_raw/
+data/
+load_new.csv
+output.csv

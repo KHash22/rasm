@@ -381,6 +381,3 @@ optmodel.fuelcell.P_net[n]) for n in hour) / 1000))
 
 mdl.elec.CAP.fix(12899.54627522421) #extend to all other units
 optmodel.heater.P_heater_RT.fix('''VALUE FROM DNN''') #extend to all other units
-
-
-
