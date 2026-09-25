@@ -40,3 +40,12 @@ $0 \leq d(t) \leq I_d(t) C_{inv}; \forall t \in T $
 4. Charge decision limit  
 $I_c(t,m) + I_d(t,m) \leq 1$  
 This means that any given moment, the BESS can either charge, discharge, or neither. It may never both charge and discharge at the same time. 
+5. State of Health  
+$SOH(t) = SOH(t-1)-\eta_{deg}\sum\limits_{m ∈ E} d(t,m); \forall t \in T \backslash t_{0}$  
+For single-market optimization,  
+$SOH(t) = SOH(t-1)-\eta_{deg}d(t); \forall t \in T \backslash t_{0}$  
+This model describes the state of health at a given time t. Note that the SOH degrades every time the BESS discharges.
+6. Degredation Limit  
+$\frac{1}{\eta_{batt}}\sum\limits_{t \in T}\sum\limits_{m \in M} d(t,m) \leq \frac{1}{24}C_{max} \sum\limits_{t \in T}SOH(t)$  
+This states that the discharge across all of t and m must be less than the total availability throughout the year, limited to 24 charge decisions per day at most. 
+
