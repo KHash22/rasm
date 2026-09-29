@@ -73,7 +73,7 @@ battery = BatteryObj(50000,21.7391,434.782,0.8695,1,50000,50000,1,0.00005475,0.8
 ### Model Parameters
 
 t0 = 0
-tf = 8760 
+tf = 8760
 hour = np.arange(t0,tf)
 
 ## Model Definition
@@ -107,27 +107,27 @@ def rule_soh(_blk, t):
     prev = soh_init if t == 0 else _blk.SOH[t-1]
     return _blk.SOH[t] == prev - battery.eta_batt*_blk.DC_DISCHARGE[t]/battery.max_capcity
 model.battery.r_soh = Constraint(hour, rule=rule_soh)
-
+"""
 def bound_soc1(_blk, t):
     return 0 <= _blk.SOC[t]
 model.battery.b_soc1 = Constraint(hour, rule=bound_soc1)
-
+"""
 def bound_soc2(_blk, t):
     return 0 >= (_blk.SOC[t]-_blk.SOH[t]) #SOH should be larger than SOC, ie less than 0.
 model.battery.b_soc2 = Constraint(hour, rule=bound_soc2)
-
+"""
 def bound_charging1(_blk, t):
     return 0 <= _blk.DC_CHARGE[t]
 model.battery.b_charge1 = Constraint(hour, rule=bound_charging1)
-
+"""
 def bound_charging2(_blk, t):
     return 0 >= (_blk.DC_CHARGE[t] - _blk.I_c[t]*battery.charge_rate_max)
 model.battery.b_charge2 = Constraint(hour, rule=bound_charging2)
-
+"""
 def bound_charging3(_blk, t):
     return 0 <= _blk.DC_DISCHARGE[t]
 model.battery.b_discharge3 = Constraint(hour, rule=bound_charging3)
-
+"""
 def bound_charging4(_blk, t):
     return 0 >= (_blk.DC_DISCHARGE[t] - _blk.I_d[t]*battery.discharge_rate_max)
 model.battery.b_discharge4 = Constraint(hour, rule=bound_charging4)
@@ -145,12 +145,24 @@ def bound_soh_discharge(_blk, t):
     return _blk.I_c[t]+_blk.I_d[t] <= 1
 model.battery.b_soh_decision = Constraint(hour, rule=bound_soh_discharge)
 
+day_hours = {}
+for h in hour:
+    day_hours.setdefault(int(h // 24), []).append(int(h))
+
+def rule_degredation(_blk, d):
+    hrs = day_hours[d]
+    total_discharge = (1/(1-battery.eta_batt))*sum(_blk.DC_DISCHARGE[h] for h in hrs)
+    soh_start = soh_init if hrs[0] == t0 else _blk.SOH[hrs[0]-1]
+    discharge_limit = (len(hrs)/24)*battery.charge_rate_max*soh_start
+    return total_discharge <= discharge_limit
+model.battery.r_degredation = Constraint(list(day_hours), rule=rule_degredation)
+'''
 def rule_degredation(_blk, t):
     total_discharge = (1/(1-battery.eta_batt))*_blk.DC_DISCHARGE[t]
     charge_limit = (1/24)*battery.charge_rate_max*_blk.SOH[t]
     return total_discharge <= charge_limit
 model.battery.r_degredation = Constraint(hour, rule=rule_degredation)
-
+'''
 def obj_rule(optmodel):
     # revenue: sell (discharge) at price, pay price to buy (charge). price is per MWh, power in kW -> /1000
     return sum(price_DA[n]*(optmodel.battery.DC_DISCHARGE[n]-optmodel.battery.DC_CHARGE[n]) for n in hour) / 1000

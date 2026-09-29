@@ -1,0 +1,19 @@
+[
+    {
+        "config_name": "default",
+        "init_soc": 0,
+        "init_soh": 1,
+        "max_capacity": 50000,
+        "soc_max": 1,
+        "max_rate_charge": 50000,
+        "max_rate_discharge": 50000,
+        "max_rate_inveerter": 50000,
+        "max_cycle_battery": 1,
+        "capex_inverter": 21.7391,
+        "capex_battery": 434.782,
+        "opex_battery": 8.695,
+        "eff_batt": 0.00005475,
+        "eff_retention": 0.01,
+        "eff_rt": 0.85
+    }
+]
