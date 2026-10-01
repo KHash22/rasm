@@ -68,7 +68,7 @@ class BatteryObj:
         self.tf = tf
         return
 
-battery = BatteryObj(50000,21.7391,434.782,0.8695,1,50000,50000,1,0.00005475,0.85,0.01,50000)
+battery = BatteryObj(50000,21.7391,434.782,0.8695,1,20000,20000,1,0.00005475,0.85,0.01,50000)
 
 ### Model Parameters
 
@@ -168,7 +168,7 @@ def obj_rule(optmodel):
     return sum(price_DA[n]*(optmodel.battery.DC_DISCHARGE[n]-optmodel.battery.DC_CHARGE[n]) for n in hour) / 1000
 model.obj = Objective(rule=obj_rule,sense=maximize)
 
-solver = SolverFactory('appsi_highs')
+solver = SolverFactory('gurobi', solver_io='direct')
 #solver.options['NonConvex'] = -1
 results = solver.solve(model, tee=True)
 print(f'solver status: {results.solver.status}, termination: {results.solver.termination_condition}')

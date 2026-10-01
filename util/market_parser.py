@@ -8,4 +8,4 @@ class MarketParser:
         df = pd.DataFrame(db[[col_date, col_da]])
         df[col_date] = pd.to_datetime(df[col_date], format=dt_format)
         result = df.groupby(df[col_date].dt.floor("h")).mean(numeric_only=True).reset_index()
-        return result        
+        return result

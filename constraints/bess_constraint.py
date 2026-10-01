@@ -31,13 +31,13 @@ class BESSConstraints:
 
     @constraint
     def rule_soc(self, _blk, t): #TODO ask about degredation param
-        prev = _blk.init_soc if t == 0 else _blk.SOC[t-1]
-        return _blk.SOC[t] == (1-_blk.ret_eta)*prev + (_blk.eta_c*_blk.DC_CHARGE[t] - _blk.DC_DISCHARGE[t]/_blk.eta_d)/_blk.max_capcity
+        prev = _blk.init_soc if t == value(_blk.t0) else _blk.SOC[t-1]
+        return _blk.SOC[t] == (1-_blk.eff_retention)*prev + (_blk.eff_charge*_blk.DC_CHARGE[t] - _blk.DC_DISCHARGE[t]/_blk.eff_discharge)/_blk.max_capacity
     
     @constraint
     def rule_soh(self, _blk, t):
     # health only fades with throughput (eta_batt per full-capacity discharge), it does not self-discharge
-        prev = _blk.init_soh if t == 0 else _blk.SOH[t-1]
+        prev = _blk.init_soh if t == value(_blk.t0) else _blk.SOH[t-1]
         return _blk.SOH[t] == prev - _blk.eff_batt*_blk.DC_DISCHARGE[t]/_blk.max_capacity
 
     @constraint
@@ -49,7 +49,7 @@ class BESSConstraints:
         return 0 >= (_blk.DC_CHARGE[t] - _blk.I_c[t]*_blk.max_rate_charge)
 
     @constraint
-    def bound_dsicharging(self, _blk, t):
+    def bound_discharging(self, _blk, t):
         return 0 >= (_blk.DC_DISCHARGE[t] - _blk.I_d[t]*_blk.max_rate_discharge)
 
     @constraint
@@ -62,13 +62,9 @@ class BESSConstraints:
         return inequality(_blk.max_rate_inverter*(-1), net_charge, _blk.max_rate_inverter)
 
     @constraint
-    def bound_soh_discharge(self, _blk, t):
-        return _blk.I_c[t]+_blk.I_d[t] <= 1
-
-    @constraint
     def rule_degredation(self, _blk, d):
         hrs = _blk.day_hours[d]
         total_discharge = (1/(1-_blk.eff_batt))*sum(_blk.DC_DISCHARGE[h] for h in hrs)
         soh_start = _blk.init_soh if hrs.first() == value(_blk.t0) else _blk.SOH[hrs.first()-1]
-        discharge_limit = (len(hrs)/24)*_blk.max_rate_charge*soh_start
+        discharge_limit = (len(hrs)/24)*_blk.max_rate_discharge*soh_start
         return total_discharge <= discharge_limit

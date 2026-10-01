@@ -7,7 +7,7 @@
         "soc_max": 1,
         "max_rate_charge": 50000,
         "max_rate_discharge": 50000,
-        "max_rate_inveerter": 50000,
+        "max_rate_inverter": 50000,
         "max_cycle_battery": 1,
         "capex_inverter": 21.7391,
         "capex_battery": 434.782,
